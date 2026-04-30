@@ -1,36 +1,52 @@
-import {Outlet, useNavigate} from 'react-router-dom'
-import {ThemeProvider} from '@mui/material'
-import {useEffect} from 'react'
-import {useDispatch, useSelector} from 'react-redux'
-import {getUser} from "./redux/Auth/action.js";
+import {CssBaseline, ThemeProvider} from '@mui/material';
+import React, {useEffect} from 'react';
+import {useDispatch} from 'react-redux';
+import {useGetUserProfileQuery} from "./redux/Auth/authApi";
+import {clearUser, setUser} from "./redux/Auth/authSlice";
 import blueTheme from "./theme/blueTheme.js";
-import Navbar from "./Customer/pages/Navbar/Navbar.jsx";
-
+import AppSnackbar from "./components/common/AppSnackbar.jsx";
+import {useKeycloak} from '@react-keycloak/web';
+import {Outlet} from 'react-router-dom';
 
 export default function RootLayout() {
-    const {auth} = useSelector((store) => store)
-    const dispatch = useDispatch()
-    const navigate = useNavigate()
+    const dispatch = useDispatch();
+    const {keycloak, initialized} = useKeycloak();
+
+    console.log("[RootLayout] Keycloak State:", {
+        initialized,
+        authenticated: keycloak?.authenticated,
+        token: keycloak?.token ? "Dã có Token" : "Chưa có Token"
+    });
+
+    const {data: userProfile, isSuccess, isLoading, error} = useGetUserProfileQuery(undefined, {
+        skip: !initialized || !keycloak.authenticated,
+    });
 
     useEffect(() => {
-        dispatch(getUser(auth.jwt || localStorage.getItem('jwt')))
-    }, [auth.jwt, dispatch])
+        if (isLoading) console.log("[RootLayout] API Profile: Loading...");
+        if (isSuccess) console.log("[RootLayout] API Profile: Success", userProfile);
+        if (error) console.error("[RootLayout] API Profile: Error", error);
+    }, [isLoading, isSuccess, error, userProfile]);
 
     useEffect(() => {
-        if (auth.user?.role === 'ROLE_OWNER') {
-            navigate('/clinic-dashboard')
+        if (initialized && !keycloak.authenticated) {
+            dispatch(clearUser());
         }
-    }, [auth.user?.role, navigate])
+    }, [initialized, keycloak.authenticated]);
+
+    useEffect(() => {
+        if (isSuccess && userProfile) {
+            dispatch(setUser(userProfile));
+        }
+    }, [isSuccess, userProfile, dispatch]);
 
     return (
-        <>
-            <ThemeProvider theme={blueTheme}>
-                <Navbar/>
-                <div className="relative">
-                    <Outlet/>
-                </div>
-            </ThemeProvider>
-
-        </>
-    )
+        <ThemeProvider theme={blueTheme}>
+            <CssBaseline/>
+            <div>
+                <Outlet/>
+                <AppSnackbar/>
+            </div>
+        </ThemeProvider>
+    );
 }

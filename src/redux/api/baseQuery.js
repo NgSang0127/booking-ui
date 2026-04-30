@@ -48,15 +48,16 @@
 
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import keycloak from '../../keycloak/keycloak';
-
 export const baseQueryWithReauth = fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
     prepareHeaders: async (headers) => {
-        if (keycloak.authenticated) {
+        if (keycloak.token) {
             try {
+                // Update token nếu còn dưới 60s hiệu lực
                 await keycloak.updateToken(60);
                 headers.set('Authorization', `Bearer ${keycloak.token}`);
-            } catch {
+            } catch (error) {
+                console.error("Failed to refresh token", error);
                 keycloak.login();
             }
         }
