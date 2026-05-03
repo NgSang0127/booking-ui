@@ -5,18 +5,11 @@ export const createClinic = createAsyncThunk(
     'clinic/createClinic',
     async (reqData, { rejectWithValue }) => {
         try {
-            // 1. Signup chủ Clinic
-            const authRes = await api.post(`/auth/signup`, reqData.ownerDetails);
-            const token = authRes.data.data.jwt;
-            localStorage.setItem("accessToken", token);
 
-            // 2. Tạo Clinic với token mới
             const { data } = await api.post('/api/clinics', reqData.clinicDetails, {
-                headers: { Authorization: `Bearer ${token}` },
             });
 
-            // 3. Điều hướng
-            reqData.navigate("/clinic-dashboard");
+            reqData.navigate("/become-partner/pending");
 
             return data;
         } catch (error) {

@@ -45,7 +45,7 @@ const SectionLabel = ({ text, colorClass = "bg-blue-50 text-blue-900" }) => (
 /* ─── Main component ─── */
 const Home = () => {
     const navigate = useNavigate();
-    const { data, isLoading, isError } = useGetClinicsQuery({ page: 0, size: 12 });
+    const { data, isLoading, isError } = useGetClinicsQuery({ page: 0, size: 12,status: 'APPROVED' });
     const clinics = data?.content || [];
 
     if (isLoading && clinics.length === 0) {

@@ -7,7 +7,7 @@ export const clinicApi = createApi({
     tagTypes: ['Clinic'],
     endpoints: (builder) => ({
         getClinics: builder.query({
-            query: ({ page = 0, size = 10 }) => `/api/clinics?page=${page}&size=${size}`,
+            query: ({ page = 0, size = 10,status='' }) => `/api/clinics?page=${page}&size=${size}${status ? `&status=${status}` : ''}`,
             providesTags: ['Clinic'],
         }),
         getClinicById: builder.query({
@@ -22,12 +22,19 @@ export const clinicApi = createApi({
             query: (city) => `/api/clinics/search?city=${city}`,
         }),
 
-        // Update Clinic (Mutation)
         updateClinic: builder.mutation({
             query: ({ clinicId, data }) => ({
                 url: `/api/clinics/${clinicId}`,
                 method: 'PUT',
                 body: data,
+            }),
+            invalidatesTags: ['Clinic'],
+        }),
+        approveClinic: builder.mutation({
+            query: ({ clinicId, status, reason }) => ({
+                url: `/api/clinics/${clinicId}/approval`,
+                method: 'PUT',
+                body: { status, reason },
             }),
             invalidatesTags: ['Clinic'],
         }),
@@ -39,5 +46,6 @@ export const {
     useGetClinicByIdQuery,
     useGetClinicByOwnerQuery,
     useSearchClinicsQuery,
-    useUpdateClinicMutation
+    useUpdateClinicMutation,
+    useApproveClinicMutation,
 } = clinicApi;
